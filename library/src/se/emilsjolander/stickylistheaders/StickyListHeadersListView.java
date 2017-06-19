@@ -13,6 +13,7 @@ import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseBooleanArray;
+import android.view.AbsSavedState;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -1094,14 +1095,19 @@ public class StickyListHeadersListView extends FrameLayout {
 
     @Override
     public Parcelable onSaveInstanceState() {
-        return new SavedState(super.onSaveInstanceState(), mList.onSaveInstanceState());
+        Parcelable superState = super.onSaveInstanceState();
+        if (superState != AbsSavedState.EMPTY_STATE) {
+            throw new IllegalStateException("Handling non empty state of parent class is not implemented");
+        }
+        else {
+            return mList.onSaveInstanceState();
+        }
     }
 
     @Override
     public void onRestoreInstanceState(Parcelable state) {
-        SavedState ss = (SavedState) state;
-        super.onRestoreInstanceState(ss.getSuperState());
-        mList.onRestoreInstanceState(ss.wrappedState);
+        super.onRestoreInstanceState(AbsSavedState.EMPTY_STATE);
+        mList.onRestoreInstanceState(state);
     }
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
@@ -1126,40 +1132,4 @@ public class StickyListHeadersListView extends FrameLayout {
     	return mList.isStackFromBottom();
     }
 
-    static class SavedState extends BaseSavedState {
-        private Parcelable wrappedState;
-
-        /**
-         * Constructor called from {@link StickyListHeadersListView#onSaveInstanceState()}
-         */
-        SavedState(Parcelable superState, Parcelable wrappedState) {
-            super(superState);
-            this.wrappedState = wrappedState;
-        }
-
-        /**
-         * Constructor called from {@link #CREATOR}
-         */
-        private SavedState(Parcel in) {
-            super(in);
-            wrappedState = in.readParcelable(null);
-        }
-
-        @Override
-        public void writeToParcel(Parcel out, int flags) {
-            super.writeToParcel(out, flags);
-            out.writeValue(wrappedState);
-        }
-
-        public static final Parcelable.Creator<SavedState> CREATOR
-            = new Parcelable.Creator<SavedState>() {
-            public SavedState createFromParcel(Parcel in) {
-                return new SavedState(in);
-            }
-
-            public SavedState[] newArray(int size) {
-                return new SavedState[size];
-            }
-        };
-    }
 }
