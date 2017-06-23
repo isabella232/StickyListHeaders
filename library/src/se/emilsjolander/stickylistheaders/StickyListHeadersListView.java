@@ -1095,19 +1095,14 @@ public class StickyListHeadersListView extends FrameLayout {
 
     @Override
     public Parcelable onSaveInstanceState() {
-        Parcelable superState = super.onSaveInstanceState();
-        if (superState != AbsSavedState.EMPTY_STATE) {
-            throw new IllegalStateException("Handling non empty state of parent class is not implemented");
-        }
-        else {
-            return mList.onSaveInstanceState();
-        }
+        return new SavedState(super.onSaveInstanceState(), mList.onSaveInstanceState());
     }
 
     @Override
     public void onRestoreInstanceState(Parcelable state) {
-        super.onRestoreInstanceState(AbsSavedState.EMPTY_STATE);
-        mList.onRestoreInstanceState(state);
+        SavedState ss = (SavedState) state;
+        super.onRestoreInstanceState(ss.getSuperState());
+        mList.onRestoreInstanceState(ss.mListSavedState);
     }
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
@@ -1130,6 +1125,38 @@ public class StickyListHeadersListView extends FrameLayout {
 
     public boolean isStackFromBottom() {
     	return mList.isStackFromBottom();
+    }
+
+    static class SavedState extends BaseSavedState {
+        private final Parcelable mListSavedState;
+
+        SavedState(Parcelable superState, Parcelable listSavedState) {
+            super(superState);
+            mListSavedState = listSavedState;
+        }
+
+        private SavedState(Parcel in) {
+            super(in);
+            mListSavedState = in.readParcelable(getClass().getClassLoader());
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeParcelable(mListSavedState, 0);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR
+            = new Parcelable.Creator<SavedState>() {
+            public SavedState createFromParcel(Parcel in) {
+                return new SavedState(in);
+            }
+
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
+
     }
 
 }
